@@ -11,6 +11,7 @@ RUN apt-get update \
        git-core \
        make \
        llvm \
+       gcc-multilib \
        crossbuild-essential-arm64 \
        openssh-client \
        libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget \
@@ -27,7 +28,7 @@ SHELL ["/bin/bash", "-lc"]
 ENTRYPOINT ["/bin/bash", "-lc"]
 
 FROM pyenv_org as pyenv_prebuild
-ARG BUILD_PYTHON_VERSIONS="3.9.2 3.8.8 3.7.9 3.6.13 2.7.9"
+ARG BUILD_PYTHON_VERSIONS="3.9.2 3.8.8 3.7.9 3.6.13 2.7.18"
 
 RUN for pyver in $BUILD_PYTHON_VERSIONS; do pyenv install $pyver; done \
     && pyenv global $BUILD_PYTHON_VERSIONS
