@@ -11,7 +11,6 @@ RUN apt-get update \
        git-core \
        make \
        llvm \
-       gcc-multilib \
        crossbuild-essential-arm64 \
        openssh-client \
        libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget \
