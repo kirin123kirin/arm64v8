@@ -1,36 +1,43 @@
+FROM ubuntu:latest as pyenv_org
+ENV CFLAGS='-O2' \
+    DEBIAN_FRONTEND=noninteractive
 
-ARG IMAGE_VERSION=latest
-FROM arm64v8/alpine:$IMAGE_VERSION
-ENV CFLAGS='-O2'
-ARG PY_VERSIONS="3.9.1 3.8.7 3.7.9 3.6.12"
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       bash \
+       cargo \
+       curl \
+       ca-certificates \
+       git-core \
+       make \
+       llvm \
+       crossbuild-essential-arm64 \
+       openssh-client \
+       libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget \
+       libncurses5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev \
 
-RUN apk add --no-cache \
-        cargo \
-        curl \
-        bash \
-        openssh-client \
-        # PyEnv deps
-        bzip2-dev coreutils dpkg-dev dpkg expat-dev \
-        findutils gcc gdbm-dev libc-dev libffi-dev libnsl-dev libtirpc-dev \
-        linux-headers make ncurses-dev openssl-dev pax-utils readline-dev \
-        sqlite-dev tcl-dev tk tk-dev util-linux-dev xz-dev zlib-dev \
-    # github,gitlab ssh
     && mkdir -p -m 0700 ~/.ssh && ssh-keyscan gitlab.com github.com | sort > ~/.ssh/known_hosts \
-    # install pyenv
+
     && curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash \
-    && echo 'export PYENV_ROOT="$HOME/.pyenv"' >> /root/.bash_profile \
-    && echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> /root/.bash_profile \
+    && echo 'export PATH="/root/.pyenv/bin:$PATH"' >> /root/.bash_profile \
     && echo 'eval "$(pyenv init -)"' >> /root/.bash_profile \
-    && bash -l
+    && true
 
-RUN for pyver in $PY_VERSIONS; do pyenv install $pyver; done \
+SHELL ["/bin/bash", "-lc"]
+ENTRYPOINT ["/bin/bash", "-lc"]
+
+FROM pyenv_org as pyenv_prebuild
+ARG BUILD_PYTHON_VERSIONS="3.9.2 3.8.8 3.7.9 3.6.13 2.7.9"
+
+RUN for pyver in $BUILD_PYTHON_VERSIONS; do pyenv install $pyver; done \
+    && pyenv global $BUILD_PYTHON_VERSIONS
     && pyenv rehash
-    && pyenv global $PY_VERSIONS
-    && for ver in $PY_VERSIONS; do pyenv local $ver; python -m pip install -U pip \
-       pip install -U setuptools wheel cython; done
-    
 
-COPY docker-entrypoint.sh
+FROM pyenv as pyenv
+COPY docker-entrypoint.sh /
+RUN python -m pip install -U pip \
+    && for ver in `ls ~/.pyenv/versions`; do pyenv local $ver; python3 -m pip install -U pip; pip3 install -U setuptools wheel cython; done
+    && true
 ONBUILD COPY . /app
 WORKDIR /app
 ENTRYPOINT ["/docker-entrypoint.sh"]
