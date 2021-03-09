@@ -41,7 +41,7 @@ RUN chmod a+x /docker-entrypoint.sh \
     && ln -s /usr/bin/aarch64-linux-gnu-gcc /usr/local/bin/gcc \
     && for be in `ls -d /usr/pyenv/versions/*/lib/python*/distutils/command/build_ext.py`; do sed -i.bak 's/return os.path.join(\*ext_path) + ext_suffix/return os.path.join(\*ext_path) + "-".join(ext_suffix.split("-")[:2]) + os.path.splitext(ext_suffix)[-1]/g' $be; done \
     && mkdir /app \
-    && apt clean \
+    && apt-get clean \
     && rm -rf /root/.cache \
     && true
 
