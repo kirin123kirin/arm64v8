@@ -2,7 +2,7 @@
 
 USER_ID=${UID:-9001}
 GROUP_ID=${GID:-9001}
-PLAT_NAME=${PLAT_NAME:manylinux2014_aarch64}
+PLAT_NAME=${PLAT_NAME:-manylinux2014_aarch64}
 
 useradd -u $USER_ID -o -m user -s /bin/bash
 groupmod -g $GROUP_ID user
