@@ -27,17 +27,17 @@ SHELL ["/bin/bash", "-lc"]
 ENTRYPOINT ["/bin/bash", "-lc"]
 
 FROM pyenv_org as pyenv_prebuild
-ARG BUILD_PYTHON_VERSIONS="3.9.2 3.8.8 3.7.9 3.6.13"
+ARG BUILD_PYTHON_VERSIONS="3.9.2 3.8.8 3.7.9 3.6.13 2.7.18"
 
 RUN for pyver in $BUILD_PYTHON_VERSIONS; do pyenv install $pyver; done \
-    && pyenv global $BUILD_PYTHON_VERSIONS \
+    && pyenv global $BUILD_PYTHON_VERSIONS
     && pyenv rehash
 
 FROM pyenv as pyenv
 COPY docker-entrypoint.sh /
 RUN python -m pip install -U pip \
-    && for ver in `ls ~/.pyenv/versions`; do pyenv local $ver; python3 -m pip install -U pip; pip3 install -U setuptools wheel cython; done \
-    && ln -s /usr/bin/aarch64-linux-gnu-gcc /usr/local/bin/gcc \
+    && for ver in `ls ~/.pyenv/versions`; do pyenv local $ver; python3 -m pip install -U pip; pip3 install -U setuptools wheel cython; done
+    && for be in `ls -d ~/.pyenv/versions/*/lib/python*/distutils/command/build_ext.py`; do sed -i.bak 's/return os.path.join(\*ext_path) + ext_suffix/return os.path.join(\*ext_path) + "-".join(ext_suffix.split("-")[:2]) + os.path.splitext(ext_suffix)[-1]/g' $be; done
     && true
 ONBUILD COPY . /app
 WORKDIR /app
