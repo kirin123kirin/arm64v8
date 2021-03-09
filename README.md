@@ -1,1 +1,1 @@
-# arm64v8
+# python3_on_arm64
